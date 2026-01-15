@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 interface SessionContextType {
   session: Session | null;
   supabase: SupabaseClient;
+  loading: boolean; // Ajout de la propriété loading
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -57,7 +58,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   }
 
   return (
-    <SessionContext.Provider value={{ session, supabase }}>
+    <SessionContext.Provider value={{ session, supabase, loading }}> {/* Ajout de loading ici */}
       {children}
     </SessionContext.Provider>
   );
