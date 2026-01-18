@@ -39,8 +39,8 @@ const SidebarContent = () => {
     { to: "/dashboard", icon: LayoutDashboard, label: "Tableau de Bord" },
     { to: "/dashboard/employees", icon: Users, label: "Gestion d'Équipe" },
     { to: "/dashboard/attendance", icon: Clock, label: "Pointage Manuel" },
-    { to: "/dashboard/leave-requests", icon: CalendarDays, label: "Demandes de Congé" }, // Updated path
-    { to: "/payroll", icon: DollarSign, label: "Paie Automatique" },
+    { to: "/dashboard/leave-requests", icon: CalendarDays, label: "Demandes de Congé" },
+    { to: "/dashboard/payroll", icon: DollarSign, label: "Paie Automatique" }, // Updated path
     { to: "/reports", icon: BarChart3, label: "Rapports & Analyses" },
     { to: "/dashboard/settings", icon: Settings, label: "Paramètres" },
   ];

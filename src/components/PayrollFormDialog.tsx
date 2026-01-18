@@ -1,0 +1,312 @@
+"use client";
+
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/components/SessionContextProvider";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const payrollFormSchema = z.object({
+  employee_id: z.string().min(1, { message: "Veuillez sélectionner un employé." }),
+  month: z.coerce.number().min(1).max(12, { message: "Le mois doit être entre 1 et 12." }),
+  year: z.coerce.number().min(2000, { message: "L'année doit être valide." }),
+  base_salary: z.coerce.number().min(0, { message: "Le salaire de base ne peut pas être négatif." }),
+  overtime_pay: z.coerce.number().min(0, { message: "La paie des heures supplémentaires ne peut pas être négative." }).optional(),
+  deductions: z.coerce.number().min(0, { message: "Les déductions ne peuvent pas être négatives." }).optional(),
+  net_pay: z.coerce.number().min(0, { message: "Le salaire net ne peut pas être négatif." }),
+  pdf_url: z.string().url({ message: "URL PDF invalide." }).optional().or(z.literal('')),
+});
+
+type PayrollFormValues = z.infer<typeof payrollFormSchema>;
+
+interface PayrollFormDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  payroll?: any; // Optional payroll data for editing
+}
+
+export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
+  open,
+  onOpenChange,
+  payroll,
+}) => {
+  const { session } = useSession();
+  const queryClient = useQueryClient();
+  const userId = session?.user?.id;
+
+  const form = useForm<PayrollFormValues>({
+    resolver: zodResolver(payrollFormSchema),
+    defaultValues: {
+      employee_id: payroll?.employee_id || "",
+      month: payroll?.month || new Date().getMonth() + 1,
+      year: payroll?.year || new Date().getFullYear(),
+      base_salary: payroll?.base_salary || 0,
+      overtime_pay: payroll?.overtime_pay || 0,
+      deductions: payroll?.deductions || 0,
+      net_pay: payroll?.net_pay || 0,
+      pdf_url: payroll?.pdf_url || "",
+    },
+  });
+
+  // Fetch employees for the dropdown
+  const { data: employees, isLoading: isLoadingEmployees } = useQuery({
+    queryKey: ["employees", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, first_name, last_name")
+        .eq("user_id", userId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+
+  useEffect(() => {
+    if (payroll) {
+      form.reset({
+        employee_id: payroll.employee_id,
+        month: payroll.month,
+        year: payroll.year,
+        base_salary: payroll.base_salary,
+        overtime_pay: payroll.overtime_pay || 0,
+        deductions: payroll.deductions || 0,
+        net_pay: payroll.net_pay,
+        pdf_url: payroll.pdf_url || "",
+      });
+    } else {
+      form.reset({
+        employee_id: "",
+        month: new Date().getMonth() + 1,
+        year: new Date().getFullYear(),
+        base_salary: 0,
+        overtime_pay: 0,
+        deductions: 0,
+        net_pay: 0,
+        pdf_url: "",
+      });
+    }
+  }, [payroll, form]);
+
+  const upsertPayrollMutation = useMutation({
+    mutationFn: async (values: PayrollFormValues) => {
+      if (!userId) throw new Error("User not authenticated.");
+
+      const payload = {
+        ...values,
+        user_id: userId,
+        overtime_pay: values.overtime_pay !== undefined ? values.overtime_pay : 0,
+        deductions: values.deductions !== undefined ? values.deductions : 0,
+      };
+
+      if (payroll?.id) {
+        const { data, error } = await supabase
+          .from("payroll")
+          .update(payload)
+          .eq("id", payroll.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      } else {
+        const { data, error } = await supabase
+          .from("payroll")
+          .insert(payload)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      toast.success(payroll ? "Fiche de paie mise à jour avec succès !" : "Fiche de paie ajoutée avec succès !");
+      queryClient.invalidateQueries({ queryKey: ["payroll", userId] });
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast.error("Erreur lors de l'enregistrement de la fiche de paie : " + error.message);
+    },
+  });
+
+  const onSubmit = (values: PayrollFormValues) => {
+    upsertPayrollMutation.mutate(values);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{payroll ? "Modifier la fiche de paie" : "Ajouter une fiche de paie"}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
+            <FormField
+              control={form.control}
+              name="employee_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Employé</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un employé" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {isLoadingEmployees ? (
+                        <SelectItem value="loading" disabled>Chargement des employés...</SelectItem>
+                      ) : (
+                        employees?.map((emp) => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.first_name} {emp.last_name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="month"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mois</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un mois" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <SelectItem key={i + 1} value={String(i + 1)}>
+                            {new Date(0, i).toLocaleString('fr-FR', { month: 'long' })}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Année</FormLabel>
+                    <Input type="number" {...field} />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="base_salary"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Salaire de base</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="overtime_pay"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Paie heures supplémentaires</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="deductions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Déductions</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="net_pay"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Salaire net</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="pdf_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL du PDF de la fiche de paie</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="submit" disabled={upsertPayrollMutation.isPending}>
+                {upsertPayrollMutation.isPending ? "Enregistrement..." : "Enregistrer"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
