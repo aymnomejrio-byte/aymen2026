@@ -7,7 +7,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import DashboardLayout from "./pages/Dashboard";
-import Settings from "./pages/Settings"; // Import the new Settings page
+import Settings from "./pages/Settings";
+import Employees from "./pages/Employees"; // Import the new Employees page
 import { SessionContextProvider } from "./components/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 </div>
               } /> {/* Default content for /dashboard */}
               <Route path="settings" element={<Settings />} /> {/* Nested settings route */}
+              <Route path="employees" element={<Employees />} /> {/* Nested employees route */}
               {/* Add other nested routes here as we build them */}
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
