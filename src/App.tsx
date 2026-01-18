@@ -11,7 +11,8 @@ import Settings from "./pages/Settings";
 import Employees from "./pages/Employees";
 import Attendance from "./pages/Attendance";
 import LeaveRequests from "./pages/LeaveRequests";
-import Payroll from "./pages/Payroll"; // Import the new Payroll page
+import Payroll from "./pages/Payroll";
+import Reports from "./pages/Reports"; // Import the new Reports page
 import { SessionContextProvider } from "./components/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -43,7 +44,8 @@ const App = () => (
               <Route path="employees" element={<Employees />} />
               <Route path="attendance" element={<Attendance />} />
               <Route path="leave-requests" element={<LeaveRequests />} />
-              <Route path="payroll" element={<Payroll />} /> {/* Nested payroll route */}
+              <Route path="payroll" element={<Payroll />} />
+              <Route path="reports" element={<Reports />} /> {/* Nested reports route */}
               {/* Add other nested routes here as we build them */}
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
