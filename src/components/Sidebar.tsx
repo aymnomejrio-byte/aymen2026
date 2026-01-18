@@ -42,7 +42,7 @@ const SidebarContent = () => {
     { to: "/leave-requests", icon: CalendarDays, label: "Demandes de Congé" },
     { to: "/payroll", icon: DollarSign, label: "Paie Automatique" },
     { to: "/reports", icon: BarChart3, label: "Rapports & Analyses" },
-    { to: "/settings", icon: Settings, label: "Paramètres" },
+    { to: "/dashboard/settings", icon: Settings, label: "Paramètres" }, // Changed path to /dashboard/settings
   ];
 
   return (
