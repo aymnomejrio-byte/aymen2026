@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import DashboardLayout from "./pages/Dashboard"; // Renamed from Dashboard to DashboardLayout for clarity
 import { SessionContextProvider } from "./components/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -21,7 +21,11 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            {/* Use DashboardLayout for all authenticated routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              {/* Nested routes for dashboard content will go here */}
+              {/* For now, the main content is directly in DashboardLayout */}
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
