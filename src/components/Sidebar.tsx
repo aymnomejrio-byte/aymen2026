@@ -37,8 +37,8 @@ const SidebarContent = () => {
 
   const navItems = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Tableau de Bord" },
-    { to: "/dashboard/employees", icon: Users, label: "Gestion d'Équipe" }, // Updated path
-    { to: "/attendance", icon: Clock, label: "Pointage Manuel" },
+    { to: "/dashboard/employees", icon: Users, label: "Gestion d'Équipe" },
+    { to: "/dashboard/attendance", icon: Clock, label: "Pointage Manuel" }, // Updated path
     { to: "/leave-requests", icon: CalendarDays, label: "Demandes de Congé" },
     { to: "/payroll", icon: DollarSign, label: "Paie Automatique" },
     { to: "/reports", icon: BarChart3, label: "Rapports & Analyses" },
