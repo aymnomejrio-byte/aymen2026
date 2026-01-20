@@ -32,6 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { calculateAttendanceMetrics } from "@/utils/attendanceCalculations"; // Import the utility
 
 const attendanceFormSchema = z.object({
   employee_id: z.string().min(1, { message: "Veuillez sélectionner un employé." }),
@@ -92,6 +93,24 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
     enabled: !!userId,
   });
 
+  // Fetch app settings for calculations
+  const { data: appSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ["app_settings", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
+        .from("app_settings")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+        throw error;
+      }
+      return data;
+    },
+    enabled: !!userId,
+  });
+
   useEffect(() => {
     if (attendance) {
       form.reset({
@@ -119,6 +138,29 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
       });
     }
   }, [attendance, form]);
+
+  // Effect to calculate attendance metrics automatically
+  useEffect(() => {
+    const checkInTime = form.watch("check_in_time");
+    const checkOutTime = form.watch("check_out_time");
+    const status = form.watch("status");
+
+    if (status === "Present" && checkInTime && checkOutTime && appSettings) {
+      const { workedHours, lateMinutes, overtimeHours } = calculateAttendanceMetrics(
+        { checkInTime, checkOutTime },
+        appSettings
+      );
+      form.setValue("worked_hours", workedHours);
+      form.setValue("late_minutes", lateMinutes);
+      form.setValue("overtime_hours", overtimeHours);
+    } else {
+      // Reset calculated fields if not 'Present' or times are missing
+      form.setValue("worked_hours", 0);
+      form.setValue("late_minutes", 0);
+      form.setValue("overtime_hours", 0);
+    }
+  }, [form, form.watch("check_in_time"), form.watch("check_out_time"), form.watch("status"), appSettings]);
+
 
   const upsertAttendanceMutation = useMutation({
     mutationFn: async (values: AttendanceFormValues) => {
@@ -319,7 +361,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Heures travaillées</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.5" {...field} />
+                      <Input type="number" step="0.5" {...field} readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -332,7 +374,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Minutes de retard</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -345,7 +387,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Heures supp.</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.5" {...field} />
+                      <Input type="number" step="0.5" {...field} readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

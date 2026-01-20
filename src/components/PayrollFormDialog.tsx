@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { calculateNetPay } from "@/utils/payrollCalculations"; // Import the utility
 
 const payrollFormSchema = z.object({
   employee_id: z.string().min(1, { message: "Veuillez sélectionner un employé." }),
@@ -109,6 +110,16 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
       });
     }
   }, [payroll, form]);
+
+  // Effect to calculate net pay automatically
+  useEffect(() => {
+    const baseSalary = form.watch("base_salary") || 0;
+    const overtimePay = form.watch("overtime_pay") || 0;
+    const deductions = form.watch("deductions") || 0;
+
+    const { netPay } = calculateNetPay({ baseSalary, overtimePay, deductions });
+    form.setValue("net_pay", netPay);
+  }, [form, form.watch("base_salary"), form.watch("overtime_pay"), form.watch("deductions")]);
 
   const upsertPayrollMutation = useMutation({
     mutationFn: async (values: PayrollFormValues) => {
@@ -278,7 +289,7 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
                 <FormItem>
                   <FormLabel>Salaire net</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input type="number" step="0.01" {...field} readOnly />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
