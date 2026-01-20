@@ -17,6 +17,7 @@ import {
 import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { EmployeeFormDialog } from "@/components/EmployeeFormDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { EmployeeTableSkeleton } from "@/components/EmployeeTableSkeleton"; // Import the new skeleton component
 
 const Employees = () => {
   const { session } = useSession();
@@ -72,7 +73,7 @@ const Employees = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement des employés...</div>;
+    return <EmployeeTableSkeleton />; // Render skeleton while loading
   }
 
   if (error) {
