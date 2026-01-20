@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 interface SessionContextType {
   session: Session | null;
   supabase: SupabaseClient;
-  loading: boolean; // Ajout de la propriété loading
+  loading: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -24,8 +24,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         setSession(currentSession);
         setLoading(false);
 
-        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-          if (currentSession) {
+        if (event === 'SIGNED_IN') {
+          // Only navigate to dashboard if coming from login page
+          if (window.location.pathname === '/login') {
             navigate('/dashboard');
           }
         } else if (event === 'SIGNED_OUT') {
@@ -34,12 +35,16 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       }
     );
 
+    // Handle initial session load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
+      // If there's a session and user is on login page, redirect to dashboard
       if (session && window.location.pathname === '/login') {
         navigate('/dashboard');
-      } else if (!session && window.location.pathname !== '/login') {
+      }
+      // If no session and user is not on login page, redirect to login
+      else if (!session && window.location.pathname !== '/login') {
         navigate('/login');
       }
     });
@@ -58,7 +63,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   }
 
   return (
-    <SessionContext.Provider value={{ session, supabase, loading }}> {/* Ajout de loading ici */}
+    <SessionContext.Provider value={{ session, supabase, loading }}>
       {children}
     </SessionContext.Provider>
   );
