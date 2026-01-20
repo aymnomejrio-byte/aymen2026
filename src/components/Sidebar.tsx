@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, LayoutDashboard, Settings, Users, CalendarDays, Clock, DollarSign, FileText, BarChart3 } from "lucide-react";
+import { Menu, LayoutDashboard, Settings, Users, CalendarDays, Clock, DollarSign, FileText, BarChart3, CalendarCheck } from "lucide-react"; // Added CalendarCheck icon
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavLinkProps {
@@ -40,8 +40,9 @@ const SidebarContent = () => {
     { to: "/dashboard/employees", icon: Users, label: "Gestion d'Équipe" },
     { to: "/dashboard/attendance", icon: Clock, label: "Pointage Manuel" },
     { to: "/dashboard/leave-requests", icon: CalendarDays, label: "Demandes de Congé" },
+    { to: "/dashboard/tunisian-holidays", icon: CalendarCheck, label: "Jours Fériés" }, // New item
     { to: "/dashboard/payroll", icon: DollarSign, label: "Paie Automatique" },
-    { to: "/dashboard/reports", icon: BarChart3, label: "Rapports & Analyses" }, // Updated path
+    { to: "/dashboard/reports", icon: BarChart3, label: "Rapports & Analyses" },
     { to: "/dashboard/settings", icon: Settings, label: "Paramètres" },
   ];
 
