@@ -361,7 +361,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Heures travaillées</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.5" {...field} readOnly />
+                      <Input type="number" step="0.5" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -374,7 +374,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Minutes de retard</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} readOnly />
+                      <Input type="number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -387,7 +387,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Heures supp.</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.5" {...field} readOnly />
+                      <Input type="number" step="0.5" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
