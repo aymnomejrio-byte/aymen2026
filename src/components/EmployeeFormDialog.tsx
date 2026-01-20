@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,6 +27,11 @@ from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const employeeFormSchema = z.object({
   first_name: z.string().min(1, { message: "Le prénom est requis." }),
@@ -36,7 +41,7 @@ const employeeFormSchema = z.object({
   email: z.string().email({ message: "Adresse email invalide." }).optional().or(z.literal('')),
   position: z.string().optional(),
   department: z.string().optional(),
-  hire_date: z.string().optional(), // Consider using a date picker for better UX
+  hire_date: z.date().optional(), // Changed to z.date()
   base_salary: z.coerce.number().min(0, { message: "Le salaire de base ne peut pas être négatif." }).optional(),
   annual_leave_balance: z.coerce.number().int().min(0, { message: "Le solde de congés ne peut pas être négatif." }).optional(),
   overtime_hours_balance: z.coerce.number().min(0, { message: "Le solde d'heures supplémentaires ne peut pas être négatif." }).optional(),
@@ -69,14 +74,14 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
       email: employee?.email || "",
       position: employee?.position || "",
       department: employee?.department || "",
-      hire_date: employee?.hire_date || "",
+      hire_date: employee?.hire_date ? new Date(employee.hire_date) : undefined, // Initialize with Date object
       base_salary: employee?.base_salary || 0,
       annual_leave_balance: employee?.annual_leave_balance || 20,
       overtime_hours_balance: employee?.overtime_hours_balance || 0,
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (employee) {
       form.reset({
         first_name: employee.first_name,
@@ -86,7 +91,7 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
         email: employee.email || "",
         position: employee.position || "",
         department: employee.department || "",
-        hire_date: employee.hire_date || "",
+        hire_date: employee.hire_date ? new Date(employee.hire_date) : undefined, // Reset with Date object
         base_salary: employee.base_salary || 0,
         annual_leave_balance: employee.annual_leave_balance || 20,
         overtime_hours_balance: employee.overtime_hours_balance || 0,
@@ -100,7 +105,7 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
         email: "",
         position: "",
         department: "",
-        hire_date: "",
+        hire_date: undefined, // Reset to undefined for new employee
         base_salary: 0,
         annual_leave_balance: 20,
         overtime_hours_balance: 0,
@@ -115,6 +120,7 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
       const payload = {
         ...values,
         user_id: userId,
+        hire_date: values.hire_date ? format(values.hire_date, "yyyy-MM-dd") : null, // Format date for Supabase
         base_salary: values.base_salary !== undefined ? values.base_salary : 0,
         annual_leave_balance: values.annual_leave_balance !== undefined ? values.annual_leave_balance : 20,
         overtime_hours_balance: values.overtime_hours_balance !== undefined ? values.overtime_hours_balance : 0,
@@ -256,11 +262,36 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
               control={form.control}
               name="hire_date"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col">
                   <FormLabel>Date d'embauche</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Choisir une date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
