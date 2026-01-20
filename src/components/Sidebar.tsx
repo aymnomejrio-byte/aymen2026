@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, LayoutDashboard, Settings, Users, CalendarDays, Clock, DollarSign, FileText, BarChart3, CalendarCheck, UserCircle } from "lucide-react"; // Added UserCircle icon
+import { Menu, LayoutDashboard, Settings, Users, CalendarDays, Clock, DollarSign, FileText, BarChart3, CalendarCheck, UserCircle, ShieldCheck } from "lucide-react"; // Added ShieldCheck icon for authorizations
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavLinkProps {
@@ -40,10 +40,11 @@ const SidebarContent = () => {
     { to: "/dashboard/employees", icon: Users, label: "Gestion d'Équipe" },
     { to: "/dashboard/attendance", icon: Clock, label: "Pointage Manuel" },
     { to: "/dashboard/leave-requests", icon: CalendarDays, label: "Demandes de Congé" },
+    { to: "/dashboard/authorizations", icon: ShieldCheck, label: "Autorisations Spéciales" }, // New item for Authorizations
     { to: "/dashboard/tunisian-holidays", icon: CalendarCheck, label: "Jours Fériés" },
     { to: "/dashboard/payroll", icon: DollarSign, label: "Paie Automatique" },
     { to: "/dashboard/reports", icon: BarChart3, label: "Rapports & Analyses" },
-    { to: "/dashboard/profile", icon: UserCircle, label: "Mon Profil" }, // New item for Profile
+    { to: "/dashboard/profile", icon: UserCircle, label: "Mon Profil" },
     { to: "/dashboard/settings", icon: Settings, label: "Paramètres" },
   ];
 
