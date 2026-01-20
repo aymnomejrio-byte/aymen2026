@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, LayoutDashboard, Settings, Users, CalendarDays, Clock, DollarSign, FileText, BarChart3, CalendarCheck, UserCircle, Hourglass } from "lucide-react"; // Added Hourglass icon
+import { Menu, LayoutDashboard, Settings, Users, CalendarDays, Clock, DollarSign, FileText, BarChart3, CalendarCheck, UserCircle } from "lucide-react"; // Added UserCircle icon
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavLinkProps {
@@ -41,10 +41,9 @@ const SidebarContent = () => {
     { to: "/dashboard/attendance", icon: Clock, label: "Pointage Manuel" },
     { to: "/dashboard/leave-requests", icon: CalendarDays, label: "Demandes de Congé" },
     { to: "/dashboard/tunisian-holidays", icon: CalendarCheck, label: "Jours Fériés" },
-    { to: "/dashboard/overtime-compensations", icon: Hourglass, label: "Compensations HS" }, // New item for Overtime Compensations
     { to: "/dashboard/payroll", icon: DollarSign, label: "Paie Automatique" },
     { to: "/dashboard/reports", icon: BarChart3, label: "Rapports & Analyses" },
-    { to: "/dashboard/profile", icon: UserCircle, label: "Mon Profil" },
+    { to: "/dashboard/profile", icon: UserCircle, label: "Mon Profil" }, // New item for Profile
     { to: "/dashboard/settings", icon: Settings, label: "Paramètres" },
   ];
 
