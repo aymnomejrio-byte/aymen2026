@@ -18,6 +18,7 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { AttendanceFormDialog } from "@/components/AttendanceFormDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import { AttendanceTableSkeleton } from "@/components/AttendanceTableSkeleton"; // Import the new skeleton component
 
 const Attendance = () => {
   const { session } = useSession();
@@ -77,7 +78,7 @@ const Attendance = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement des enregistrements de présence...</div>;
+    return <AttendanceTableSkeleton />; // Render skeleton while loading
   }
 
   if (error) {
