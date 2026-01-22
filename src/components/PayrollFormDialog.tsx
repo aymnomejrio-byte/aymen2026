@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { calculateNetPay } from "@/utils/payrollCalculations"; // Import the utility
+import { calculateNetPay, getAutomatedOvertimePay } from "@/utils/payrollCalculations"; // Import the new utility
 
 const payrollFormSchema = z.object({
   employee_id: z.string().min(1, { message: "Veuillez sélectionner un employé." }),
@@ -64,7 +64,7 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
       month: payroll?.month || new Date().getMonth() + 1,
       year: payroll?.year || new Date().getFullYear(),
       base_salary: payroll?.base_salary || 0,
-      overtime_pay: payroll?.overtime_pay || 0,
+      overtime_pay: payroll?.overtime_pay || 0, // This will be overridden by automated calculation
       deductions: payroll?.deductions || 0,
       net_pay: payroll?.net_pay || 0,
       pdf_url: payroll?.pdf_url || "",
@@ -86,6 +86,18 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
     enabled: !!userId,
   });
 
+  // Watch form fields for automated overtime calculation
+  const watchedEmployeeId = form.watch("employee_id");
+  const watchedMonth = form.watch("month");
+  const watchedYear = form.watch("year");
+
+  const { data: automatedOvertimePay, isLoading: isLoadingAutomatedOvertimePay } = useQuery({
+    queryKey: ["automated_overtime_pay", watchedEmployeeId, watchedMonth, watchedYear, userId],
+    queryFn: () => getAutomatedOvertimePay(watchedEmployeeId, watchedMonth, watchedYear, userId!),
+    enabled: !!watchedEmployeeId && !!userId && !payroll?.id, // Only enable for new payroll records or if explicitly requested
+    initialData: 0, // Provide an initial value to avoid undefined
+  });
+
   useEffect(() => {
     if (payroll) {
       form.reset({
@@ -104,7 +116,7 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
         base_salary: 0,
-        overtime_pay: 0,
+        overtime_pay: 0, // Reset to 0 for new forms, will be updated by query
         deductions: 0,
         net_pay: 0,
         pdf_url: "",
@@ -112,10 +124,18 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
     }
   }, [payroll, form]);
 
+  // Effect to update overtime_pay when automatedOvertimePay changes (for new records)
+  useEffect(() => {
+    if (!payroll?.id && automatedOvertimePay !== undefined) { // Only for new records
+      form.setValue("overtime_pay", automatedOvertimePay);
+    }
+  }, [automatedOvertimePay, form, payroll?.id]);
+
+
   // Effect to calculate net pay automatically
   useEffect(() => {
     const baseSalary = form.watch("base_salary") || 0;
-    const overtimePay = form.watch("overtime_pay") || 0;
+    const overtimePay = form.watch("overtime_pay") || 0; // Use the watched value, which might be automated or manual
     const deductions = form.watch("deductions") || 0;
 
     const { netPay } = calculateNetPay({ baseSalary, overtimePay, deductions });
@@ -265,7 +285,7 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
                 <FormItem>
                   <FormLabel>Paie heures supplémentaires</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input type="number" step="0.01" {...field} disabled={!payroll?.id && isLoadingAutomatedOvertimePay} /> {/* Disable for new records while loading */}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
