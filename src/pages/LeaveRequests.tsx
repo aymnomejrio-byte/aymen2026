@@ -18,6 +18,7 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { LeaveRequestFormDialog } from "@/components/LeaveRequestFormDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import { LeaveRequestTableSkeleton } from "@/components/LeaveRequestTableSkeleton"; // Import the new skeleton component
 
 const LeaveRequests = () => {
   const { session } = useSession();
@@ -77,7 +78,7 @@ const LeaveRequests = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement des demandes de congé...</div>;
+    return <LeaveRequestTableSkeleton />; // Render skeleton while loading
   }
 
   if (error) {
