@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "lucide-react";
+import { ProfileFormSkeleton } from "@/components/ProfileFormSkeleton"; // Import the new skeleton component
 
 const profileFormSchema = z.object({
   first_name: z.string().min(1, { message: "Le prénom est requis." }).optional().or(z.literal('')),
@@ -105,7 +106,7 @@ const Profile = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement du profil...</div>;
+    return <ProfileFormSkeleton />; // Render skeleton while loading
   }
 
   return (

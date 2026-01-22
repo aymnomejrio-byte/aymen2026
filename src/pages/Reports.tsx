@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Separator } from "@/components/ui/separator";
 import { Users, Clock, CalendarDays, CalendarCheck } from "lucide-react"; // Importation des icônes manquantes
+import { ReportsSkeleton } from "@/components/ReportsSkeleton"; // Import the new skeleton component
 
 const Reports = () => {
   const { session } = useSession();
@@ -88,7 +89,7 @@ const Reports = () => {
   const isLoading = isLoadingEmployees || isLoadingEmployeesByDepartment || isLoadingAttendance || isLoadingLeaveRequests;
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement des rapports...</div>;
+    return <ReportsSkeleton />; // Render skeleton while loading
   }
 
   return (

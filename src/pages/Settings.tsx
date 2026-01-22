@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { SettingsFormSkeleton } from "@/components/SettingsFormSkeleton"; // Import the new skeleton component
 
 const formSchema = z.object({
   work_days: z.array(z.string()).min(1, { message: "Veuillez sélectionner au moins un jour de travail." }),
@@ -122,7 +123,7 @@ const Settings = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement des paramètres...</div>;
+    return <SettingsFormSkeleton />; // Render skeleton while loading
   }
 
   return (

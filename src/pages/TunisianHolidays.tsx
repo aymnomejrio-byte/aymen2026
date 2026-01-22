@@ -18,6 +18,7 @@ import { PlusCircle, Edit, Trash2 } from "lucide-react";
 import { TunisianHolidayFormDialog } from "@/components/TunisianHolidayFormDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
+import { TunisianHolidayTableSkeleton } from "@/components/TunisianHolidayTableSkeleton"; // Import the new skeleton component
 
 const TunisianHolidays = () => {
   const { session } = useSession();
@@ -74,7 +75,7 @@ const TunisianHolidays = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement des jours fériés...</div>;
+    return <TunisianHolidayTableSkeleton />; // Render skeleton while loading
   }
 
   if (error) {
