@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription, // Import DialogDescription
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -23,7 +23,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription, // Added FormDescription here
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,8 +33,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { format, differenceInCalendarDays, isBefore } from "date-fns"; // Import isBefore
+import { cn } from "@/lib/utils"; // Import cn
+
+// Helper to calculate calendar days inclusive
+const calculateCalendarDays = (startDate: Date, endDate: Date): number => {
+  if (!startDate || !endDate || isBefore(endDate, startDate)) return 0;
+  return differenceInCalendarDays(endDate, startDate) + 1; // +1 to include both start and end day
+};
 
 const leaveRequestFormSchema = z.object({
   employee_id: z.string().min(1, { message: "Veuillez sélectionner un employé." }),
@@ -44,6 +50,7 @@ const leaveRequestFormSchema = z.object({
   reason: z.string().optional(),
   status: z.enum(["Submitted", "Approved", "Rejected", "Cancelled"], { required_error: "Le statut est requis." }),
   compensation_applied: z.boolean().default(false).optional(),
+  days_deducted: z.coerce.number().int().min(0).optional(), // Added for tracking
 });
 
 type LeaveRequestFormValues = z.infer<typeof leaveRequestFormSchema>;
@@ -73,6 +80,7 @@ export const LeaveRequestFormDialog: React.FC<LeaveRequestFormDialogProps> = ({
       reason: leaveRequest?.reason || "",
       status: leaveRequest?.status || "Submitted",
       compensation_applied: leaveRequest?.compensation_applied || false,
+      days_deducted: leaveRequest?.days_deducted || 0,
     },
   });
 
@@ -83,7 +91,7 @@ export const LeaveRequestFormDialog: React.FC<LeaveRequestFormDialogProps> = ({
       if (!userId) return [];
       const { data, error } = await supabase
         .from("employees")
-        .select("id, first_name, last_name")
+        .select("id, first_name, last_name, annual_leave_balance")
         .eq("user_id", userId);
       if (error) throw error;
       return data;
@@ -101,6 +109,7 @@ export const LeaveRequestFormDialog: React.FC<LeaveRequestFormDialogProps> = ({
         reason: leaveRequest.reason || "",
         status: leaveRequest.status,
         compensation_applied: leaveRequest.compensation_applied || false,
+        days_deducted: leaveRequest.days_deducted || 0,
       });
     } else {
       form.reset({
@@ -111,6 +120,7 @@ export const LeaveRequestFormDialog: React.FC<LeaveRequestFormDialogProps> = ({
         reason: "",
         status: "Submitted",
         compensation_applied: false,
+        days_deducted: 0,
       });
     }
   }, [leaveRequest, form]);
@@ -119,13 +129,92 @@ export const LeaveRequestFormDialog: React.FC<LeaveRequestFormDialogProps> = ({
     mutationFn: async (values: LeaveRequestFormValues) => {
       if (!userId) throw new Error("User not authenticated.");
 
+      const newStartDate = values.start_date;
+      const newEndDate = values.end_date;
+      const newStatus = values.status;
+      const newType = values.type;
+      const newEmployeeId = values.employee_id;
+
+      let oldLeaveRequest: any = null;
+      let oldEmployeeAnnualLeaveBalance = 0;
+      let oldDaysDeducted = 0;
+
+      // 1. Fetch original leave request and employee balance if editing
+      if (leaveRequest?.id) {
+        const { data: originalRequest, error: fetchOriginalError } = await supabase
+          .from("leave_requests")
+          .select("status, type, days_deducted, employee_id")
+          .eq("id", leaveRequest.id)
+          .single();
+        if (fetchOriginalError) throw fetchOriginalError;
+        oldLeaveRequest = originalRequest;
+        oldDaysDeducted = originalRequest.days_deducted || 0;
+      }
+
+      const { data: employeeData, error: fetchEmployeeError } = await supabase
+        .from("employees")
+        .select("annual_leave_balance")
+        .eq("id", newEmployeeId)
+        .eq("user_id", userId)
+        .single();
+      if (fetchEmployeeError) throw fetchEmployeeError;
+      oldEmployeeAnnualLeaveBalance = employeeData.annual_leave_balance || 0;
+
+      // 2. Calculate new days to deduct for the leave request
+      const newCalculatedDaysForLeave = (newType === "Annual" && newStatus === "Approved")
+        ? calculateCalendarDays(newStartDate, newEndDate)
+        : 0;
+
+      let balanceAdjustment = 0;
+
+      // 3. Determine balance adjustment for the employee
+      if (leaveRequest?.id) { // Editing existing request
+        const wasApprovedAnnual = oldLeaveRequest.status === "Approved" && oldLeaveRequest.type === "Annual";
+        const isApprovedAnnual = newStatus === "Approved" && newType === "Annual";
+
+        if (wasApprovedAnnual && !isApprovedAnnual) {
+          // Was approved annual, now it's not (rejected, cancelled, submitted, or type changed) -> credit back original deduction
+          balanceAdjustment += oldDaysDeducted;
+        } else if (!wasApprovedAnnual && isApprovedAnnual) {
+          // Was not approved annual, now it is -> deduct new amount
+          balanceAdjustment -= newCalculatedDaysForLeave;
+        } else if (wasApprovedAnnual && isApprovedAnnual) {
+          // Was approved annual, still approved annual -> adjust for date/days changes
+          if (oldDaysDeducted !== newCalculatedDaysForLeave) {
+            balanceAdjustment += oldDaysDeducted; // Credit back old
+            balanceAdjustment -= newCalculatedDaysForLeave; // Deduct new
+          }
+        }
+      } else { // New request
+        if (newStatus === "Approved" && newType === "Annual") {
+          balanceAdjustment -= newCalculatedDaysForLeave;
+        }
+      }
+
+      // 4. Update employee balance if needed
+      if (balanceAdjustment !== 0) {
+        const updatedBalance = oldEmployeeAnnualLeaveBalance + balanceAdjustment;
+        if (updatedBalance < 0) {
+          throw new Error("Solde de congés annuels insuffisant pour cette opération.");
+        }
+        const { error: updateBalanceError } = await supabase
+          .from("employees")
+          .update({ annual_leave_balance: updatedBalance })
+          .eq("id", newEmployeeId)
+          .eq("user_id", userId);
+        if (updateBalanceError) throw updateBalanceError;
+      }
+
+      // 5. Prepare payload for leave_requests upsert
       const payload = {
         ...values,
         user_id: userId,
-        start_date: format(values.start_date, "yyyy-MM-dd"),
-        end_date: format(values.end_date, "yyyy-MM-dd"),
+        start_date: format(newStartDate, "yyyy-MM-dd"),
+        end_date: format(newEndDate, "yyyy-MM-dd"),
+        days_deducted: newCalculatedDaysForLeave, // Store the actual days deducted for this request
       };
 
+      // 6. Perform leave_requests upsert
       if (leaveRequest?.id) {
         const { data, error } = await supabase
           .from("leave_requests")
@@ -148,6 +237,7 @@ export const LeaveRequestFormDialog: React.FC<LeaveRequestFormDialogProps> = ({
     onSuccess: () => {
       toast.success(leaveRequest ? "Demande de congé mise à jour avec succès !" : "Demande de congé ajoutée avec succès !");
       queryClient.invalidateQueries({ queryKey: ["leave_requests", userId] });
+      queryClient.invalidateQueries({ queryKey: ["employees", userId] }); // Invalidate employees query to reflect balance change
       onOpenChange(false);
     },
     onError: (error) => {
@@ -188,7 +278,7 @@ export const LeaveRequestFormDialog: React.FC<LeaveRequestFormDialogProps> = ({
                       ) : (
                         employees?.map((emp) => (
                           <SelectItem key={emp.id} value={emp.id}>
-                            {emp.first_name} {emp.last_name}
+                            {emp.first_name} {emp.last_name} (Solde: {emp.annual_leave_balance} jours)
                           </SelectItem>
                         ))
                       )}
