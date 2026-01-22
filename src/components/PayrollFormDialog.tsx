@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm } from "react-hook-form"; // Corrected import path
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription, // Import DialogDescription
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -233,14 +233,14 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Mois</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                    <Select onValueChange={field.onChange} value={String(field.value)}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Sélectionner un mois" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Array.from({ length: 12 }, (_, i) => (
+                        {Array.from({ length: 12 }).map((_, i) => (
                           <SelectItem key={i + 1} value={String(i + 1)}>
                             {new Date(0, i).toLocaleString('fr-FR', { month: 'long' })}
                           </SelectItem>
@@ -257,7 +257,9 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Année</FormLabel>
-                    <Input type="number" {...field} />
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
