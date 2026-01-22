@@ -1,10 +1,17 @@
-import { parse, differenceInMinutes, isBefore, isAfter, format } from 'date-fns';
+import { parse, differenceInMinutes, isBefore, isAfter, format, getDay } from 'date-fns';
+
+interface DaySettings {
+  day: string;
+  is_work_day: boolean;
+  start_time: string | null; // HH:MM
+  end_time: string | null; // HH:MM
+  break_duration_minutes: number | null;
+  overtime_threshold_hours: number | null;
+  overtime_rate_multiplier: number | null;
+}
 
 interface AppSettings {
-  start_time: string; // HH:MM:SS
-  end_time: string; // HH:MM:SS
-  break_duration_minutes: number;
-  overtime_threshold_hours: number;
+  daily_settings: DaySettings[];
 }
 
 interface AttendanceTimes {
@@ -18,28 +25,37 @@ interface CalculatedAttendance {
   overtimeHours: number;
 }
 
+const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 export const calculateAttendanceMetrics = (
+  attendanceDate: Date, // Pass the full date now
   times: AttendanceTimes,
-  settings: AppSettings | null
+  appSettings: AppSettings | null
 ): CalculatedAttendance => {
   let workedHours = 0;
   let lateMinutes = 0;
   let overtimeHours = 0;
 
-  if (!settings || !times.checkInTime || !times.checkOutTime) {
+  if (!appSettings || !appSettings.daily_settings || !times.checkInTime || !times.checkOutTime) {
     return { workedHours, lateMinutes, overtimeHours };
   }
 
-  const dummyDate = format(new Date(), 'yyyy-MM-dd'); // Use a dummy date for parsing times
+  const dayOfWeek = dayNames[getDay(attendanceDate)];
+  const daySetting = appSettings.daily_settings.find(setting => setting.day === dayOfWeek);
+
+  if (!daySetting || !daySetting.is_work_day || !daySetting.start_time || !daySetting.end_time || daySetting.break_duration_minutes === null || daySetting.overtime_threshold_hours === null) {
+    return { workedHours, lateMinutes, overtimeHours }; // Not a work day or essential settings are missing
+  }
+
+  const dummyDate = format(attendanceDate, 'yyyy-MM-dd'); // Use the actual attendance date for parsing times
 
   const checkIn = parse(`${dummyDate} ${times.checkInTime}`, 'yyyy-MM-dd HH:mm', new Date());
   const checkOut = parse(`${dummyDate} ${times.checkOutTime}`, 'yyyy-MM-dd HH:mm', new Date());
-  const officialStartTime = parse(`${dummyDate} ${settings.start_time.substring(0, 5)}`, 'yyyy-MM-dd HH:mm', new Date());
-  // const officialEndTime = parse(`${dummyDate} ${settings.end_time.substring(0, 5)}`, 'yyyy-MM-dd HH:mm', new Date()); // Not directly used for worked hours calculation here
+  const officialStartTime = parse(`${dummyDate} ${daySetting.start_time}`, 'yyyy-MM-dd HH:mm', new Date());
+  // const officialEndTime = parse(`${dummyDate} ${daySetting.end_time}`, 'yyyy-MM-dd HH:mm', new Date()); // Not directly used for worked hours calculation here
 
   // Ensure checkOut is after checkIn
   if (isBefore(checkOut, checkIn)) {
-    // If check-out is before check-in on the same day, assume no work or invalid entry
     return { workedHours, lateMinutes, overtimeHours };
   }
 
@@ -47,7 +63,7 @@ export const calculateAttendanceMetrics = (
   let totalMinutesWorked = differenceInMinutes(checkOut, checkIn);
 
   // Subtract break duration
-  totalMinutesWorked -= settings.break_duration_minutes;
+  totalMinutesWorked -= daySetting.break_duration_minutes;
 
   // Ensure worked minutes are not negative
   if (totalMinutesWorked < 0) {
@@ -62,8 +78,8 @@ export const calculateAttendanceMetrics = (
   }
 
   // Calculate overtime hours
-  if (workedHours > settings.overtime_threshold_hours) {
-    overtimeHours = workedHours - settings.overtime_threshold_hours;
+  if (workedHours > daySetting.overtime_threshold_hours) {
+    overtimeHours = workedHours - daySetting.overtime_threshold_hours;
   }
 
   return {

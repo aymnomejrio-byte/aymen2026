@@ -101,7 +101,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
       if (!userId) return null;
       const { data, error } = await supabase
         .from("app_settings")
-        .select("*")
+        .select("daily_settings") // Select only daily_settings
         .eq("user_id", userId)
         .single();
       if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
@@ -142,12 +142,14 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
 
   // Effect to calculate attendance metrics automatically
   useEffect(() => {
+    const attendanceDate = form.watch("date");
     const checkInTime = form.watch("check_in_time");
     const checkOutTime = form.watch("check_out_time");
     const status = form.watch("status");
 
-    if (status === "Present" && checkInTime && checkOutTime && appSettings) {
+    if (status === "Present" && attendanceDate && checkInTime && checkOutTime && appSettings) {
       const { workedHours, lateMinutes, overtimeHours } = calculateAttendanceMetrics(
+        attendanceDate,
         { checkInTime, checkOutTime },
         appSettings
       );
@@ -160,7 +162,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
       form.setValue("late_minutes", 0);
       form.setValue("overtime_hours", 0);
     }
-  }, [form, form.watch("check_in_time"), form.watch("check_out_time"), form.watch("status"), appSettings]);
+  }, [form, form.watch("date"), form.watch("check_in_time"), form.watch("check_out_time"), form.watch("status"), appSettings]);
 
 
   const upsertAttendanceMutation = useMutation({
