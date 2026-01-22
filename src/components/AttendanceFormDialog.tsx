@@ -33,7 +33,6 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { calculateAttendanceMetrics } from "@/utils/attendanceCalculations"; // Import the utility
-import { DialogDescription } from "@/components/ui/dialog"; // Import DialogDescription
 
 const attendanceFormSchema = z.object({
   employee_id: z.string().min(1, { message: "Veuillez sélectionner un employé." }),
@@ -216,9 +215,6 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{attendance ? "Modifier la présence" : "Ajouter une présence"}</DialogTitle>
-          <DialogDescription>
-            {attendance ? "Modifiez les détails de l'enregistrement de présence." : "Remplissez les informations pour ajouter un nouvel enregistrement de présence."}
-          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">

@@ -32,7 +32,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { DialogDescription } from "@/components/ui/dialog"; // Import DialogDescription
 
 const employeeFormSchema = z.object({
   first_name: z.string().min(1, { message: "Le prénom est requis." }),
@@ -165,9 +164,6 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{employee ? "Modifier l'employé" : "Ajouter un nouvel employé"}</DialogTitle>
-          <DialogDescription>
-            {employee ? "Modifiez les détails de l'employé existant." : "Remplissez les informations pour ajouter un nouvel employé."}
-          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
