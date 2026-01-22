@@ -7,8 +7,8 @@ import { useSession } from "@/components/SessionContextProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Separator } from "@/components/ui/separator";
-import { Users, Clock, CalendarDays, CalendarCheck } from "lucide-react"; // Importation des icônes manquantes
-import { ReportsSkeleton } from "@/components/ReportsSkeleton"; // Import the new skeleton component
+import { Users, Clock, CalendarDays, CalendarCheck } from "lucide-react";
+import { ReportsSkeleton } from "@/components/ReportsSkeleton";
 
 const Reports = () => {
   const { session } = useSession();
@@ -34,11 +34,11 @@ const Reports = () => {
     queryKey: ["employees_by_department", userId],
     queryFn: async () => {
       if (!userId) return [];
+      // Corrected: Select only the department column, then aggregate client-side
       const { data, error } = await supabase
         .from("employees")
-        .select("department, count")
-        .eq("user_id", userId)
-        .order("department", { ascending: true });
+        .select("department")
+        .eq("user_id", userId);
       if (error) throw error;
 
       // Aggregate counts by department
@@ -86,10 +86,25 @@ const Reports = () => {
     enabled: !!userId,
   });
 
-  const isLoading = isLoadingEmployees || isLoadingEmployeesByDepartment || isLoadingAttendance || isLoadingLeaveRequests;
+  // Fetch total Tunisian holidays
+  const { data: totalTunisianHolidays, isLoading: isLoadingTunisianHolidays } = useQuery({
+    queryKey: ["total_tunisian_holidays", userId],
+    queryFn: async () => {
+      if (!userId) return 0;
+      const { count, error } = await supabase
+        .from("tunisian_holidays")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId);
+      if (error) throw error;
+      return count;
+    },
+    enabled: !!userId,
+  });
+
+  const isLoading = isLoadingEmployees || isLoadingEmployeesByDepartment || isLoadingAttendance || isLoadingLeaveRequests || isLoadingTunisianHolidays;
 
   if (isLoading) {
-    return <ReportsSkeleton />; // Render skeleton while loading
+    return <ReportsSkeleton />;
   }
 
   return (
@@ -144,8 +159,7 @@ const Reports = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {/* This data is not fetched yet, but placeholder for future */}
-              N/A
+              {totalTunisianHolidays}
             </div>
             <p className="text-xs text-muted-foreground">
               Nombre de jours fériés configurés
