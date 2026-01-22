@@ -19,6 +19,17 @@ interface AttendanceTimes {
   checkOutTime: string | null; // HH:MM
 }
 
+interface Authorization {
+  id: string;
+  employee_id: string;
+  type: "Late Arrival" | "Early Departure" | "Other";
+  date: string;
+  requested_time: string | null; // HH:MM
+  reason: string | null;
+  status: "Submitted" | "Approved" | "Rejected";
+  // ... other fields
+}
+
 interface CalculatedAttendance {
   workedHours: number;
   lateMinutes: number;
@@ -30,7 +41,8 @@ const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frida
 export const calculateAttendanceMetrics = (
   attendanceDate: Date, // Pass the full date now
   times: AttendanceTimes,
-  appSettings: AppSettings | null
+  appSettings: AppSettings | null,
+  approvedAuthorizations: Authorization[] = [] // New optional parameter
 ): CalculatedAttendance => {
   let workedHours = 0;
   let lateMinutes = 0;
@@ -75,6 +87,15 @@ export const calculateAttendanceMetrics = (
   // Calculate late minutes
   if (isAfter(checkIn, officialStartTime)) {
     lateMinutes = differenceInMinutes(checkIn, officialStartTime);
+  }
+
+  // Apply authorization logic for late minutes
+  const approvedLateArrival = approvedAuthorizations.find(auth => auth.type === "Late Arrival" && auth.status === "Approved");
+  if (approvedLateArrival) {
+    // If there's an approved late arrival, we assume no late minutes for this entry.
+    // A more complex logic could compare checkIn with approvedLateArrival.requested_time
+    // but for simplicity, any approved late arrival for the day zeros out late minutes.
+    lateMinutes = 0;
   }
 
   // Calculate overtime hours

@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription, // Import DialogDescription
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -112,6 +112,49 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
     enabled: !!userId,
   });
 
+  const watchedEmployeeId = form.watch("employee_id");
+  const watchedDate = form.watch("date");
+
+  // Fetch approved leave requests for the selected employee and date
+  const { data: leaveRequestsForDate, isLoading: isLoadingLeaveRequestsForDate } = useQuery({
+    queryKey: ["leave_requests_for_date", watchedEmployeeId, watchedDate?.toISOString(), userId],
+    queryFn: async () => {
+      if (!userId || !watchedEmployeeId || !watchedDate) return null;
+      const formattedDate = format(watchedDate, "yyyy-MM-dd");
+      const { data, error } = await supabase
+        .from("leave_requests")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("employee_id", watchedEmployeeId)
+        .eq("status", "Approved")
+        .lte("start_date", formattedDate)
+        .gte("end_date", formattedDate)
+        .single(); // Expecting at most one approved leave for a given day
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: !!userId && !!watchedEmployeeId && !!watchedDate,
+  });
+
+  // Fetch approved authorizations for the selected employee and date
+  const { data: authorizationsForDate, isLoading: isLoadingAuthorizationsForDate } = useQuery({
+    queryKey: ["authorizations_for_date", watchedEmployeeId, watchedDate?.toISOString(), userId],
+    queryFn: async () => {
+      if (!userId || !watchedEmployeeId || !watchedDate) return [];
+      const formattedDate = format(watchedDate, "yyyy-MM-dd");
+      const { data, error } = await supabase
+        .from("authorizations")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("employee_id", watchedEmployeeId)
+        .eq("status", "Approved")
+        .eq("date", formattedDate);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId && !!watchedEmployeeId && !!watchedDate,
+  });
+
   useEffect(() => {
     if (attendance) {
       form.reset({
@@ -140,18 +183,40 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
     }
   }, [attendance, form]);
 
-  // Effect to calculate attendance metrics automatically
+  // Effect to calculate attendance metrics automatically, considering leaves and authorizations
   useEffect(() => {
     const attendanceDate = form.watch("date");
     const checkInTime = form.watch("check_in_time");
     const checkOutTime = form.watch("check_out_time");
-    const status = form.watch("status");
+    let currentStatus = form.getValues("status"); // Get current status from form state
 
-    if (status === "Present" && attendanceDate && checkInTime && checkOutTime && appSettings) {
+    // Reset calculated fields initially
+    form.setValue("worked_hours", 0);
+    form.setValue("late_minutes", 0);
+    form.setValue("overtime_hours", 0);
+
+    // Determine if fields should be disabled
+    const isLeaveActive = leaveRequestsForDate && leaveRequestsForDate.status === "Approved";
+    const isHolidayActive = currentStatus === "Holiday"; // Assuming Holiday status is set manually or by another integration
+
+    // Priority 1: Handle Approved Leave Request
+    if (isLeaveActive) {
+      form.setValue("status", "Leave");
+      form.setValue("check_in_time", "");
+      form.setValue("check_out_time", "");
+      form.setValue("worked_hours", 0);
+      form.setValue("late_minutes", 0);
+      form.setValue("overtime_hours", 0);
+      return; // Stop further calculations if on leave
+    }
+
+    // If not on leave, proceed with normal attendance calculations, considering authorizations
+    if (currentStatus === "Present" && attendanceDate && checkInTime && checkOutTime && appSettings) {
       const { workedHours, lateMinutes, overtimeHours } = calculateAttendanceMetrics(
         attendanceDate,
         { checkInTime, checkOutTime },
-        appSettings
+        appSettings,
+        authorizationsForDate || [] // Pass approved authorizations
       );
       form.setValue("worked_hours", workedHours);
       form.setValue("late_minutes", lateMinutes);
@@ -162,8 +227,16 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
       form.setValue("late_minutes", 0);
       form.setValue("overtime_hours", 0);
     }
-  }, [form, form.watch("date"), form.watch("check_in_time"), form.watch("check_out_time"), form.watch("status"), appSettings]);
-
+  }, [
+    form,
+    form.watch("date"),
+    form.watch("check_in_time"),
+    form.watch("check_out_time"),
+    form.watch("status"), // Watch status to react to manual changes
+    appSettings,
+    leaveRequestsForDate,
+    authorizationsForDate,
+  ]);
 
   const upsertAttendanceMutation = useMutation({
     mutationFn: async (values: AttendanceFormValues) => {
@@ -213,6 +286,8 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
     upsertAttendanceMutation.mutate(values);
   };
 
+  const isLeaveActive = leaveRequestsForDate && leaveRequestsForDate.status === "Approved";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -230,7 +305,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Employé</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLeaveActive}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un employé" />
@@ -268,6 +343,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                             "w-full pl-3 text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
+                          disabled={isLeaveActive}
                         >
                           {field.value ? (
                             format(field.value, "PPP")
@@ -300,7 +376,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Heure d'arrivée</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input type="time" {...field} disabled={isLeaveActive} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -313,7 +389,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Heure de départ</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input type="time" {...field} disabled={isLeaveActive} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -327,7 +403,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Statut</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLeaveActive}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionner un statut" />
@@ -352,7 +428,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} disabled={isLeaveActive} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -367,7 +443,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Heures travaillées</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.5" {...field} />
+                      <Input type="number" step="0.5" {...field} readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -380,7 +456,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Minutes de retard</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -393,7 +469,7 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                   <FormItem>
                     <FormLabel>Heures supp.</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.5" {...field} />
+                      <Input type="number" step="0.5" {...field} readOnly />
                     </FormControl>
                   <FormMessage />
                 </FormItem>
