@@ -42,6 +42,26 @@ export const ReportsSkeleton = () => {
         </CardContent>
       </Card>
 
+      {/* New skeletons for monthly hours chart */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle><Skeleton className="h-6 w-80" /></CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+
+      {/* New skeletons for leave types pie chart */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle><Skeleton className="h-6 w-80" /></CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+
       <div className="mt-8 p-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-md text-center text-gray-500 dark:text-gray-400">
         <Skeleton className="h-5 w-full max-w-md mx-auto" />
       </div>

@@ -5,10 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/components/SessionContextProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Separator } from "@/components/ui/separator";
 import { Users, Clock, CalendarDays, CalendarCheck } from "lucide-react";
 import { ReportsSkeleton } from "@/components/ReportsSkeleton";
+import { format } from "date-fns";
 
 const Reports = () => {
   const { session } = useSession();
@@ -101,11 +102,73 @@ const Reports = () => {
     enabled: !!userId,
   });
 
-  const isLoading = isLoadingEmployees || isLoadingEmployeesByDepartment || isLoadingAttendance || isLoadingLeaveRequests || isLoadingTunisianHolidays;
+  // New query: Monthly Worked and Overtime Hours
+  const { data: monthlyHours, isLoading: isLoadingMonthlyHours } = useQuery({
+    queryKey: ["monthly_hours", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from("attendance")
+        .select("date, worked_hours, overtime_hours")
+        .eq("user_id", userId)
+        .order("date", { ascending: true });
+      if (error) throw error;
+
+      const aggregatedData: { [key: string]: { monthYear: string; workedHours: number; overtimeHours: number } } = {};
+
+      data.forEach((record: any) => {
+        const recordDate = new Date(record.date);
+        const monthYear = format(recordDate, "MM/yyyy"); // e.g., "01/2023"
+
+        if (!aggregatedData[monthYear]) {
+          aggregatedData[monthYear] = { monthYear, workedHours: 0, overtimeHours: 0 };
+        }
+        aggregatedData[monthYear].workedHours += record.worked_hours || 0;
+        aggregatedData[monthYear].overtimeHours += record.overtime_hours || 0;
+      });
+
+      return Object.values(aggregatedData).sort((a, b) => {
+        const [aMonth, aYear] = a.monthYear.split('/').map(Number);
+        const [bMonth, bYear] = b.monthYear.split('/').map(Number);
+        if (aYear !== bYear) return aYear - bYear;
+        return aMonth - bMonth;
+      });
+    },
+    enabled: !!userId,
+  });
+
+  // New query: Leave Requests by Type
+  const { data: leaveTypes, isLoading: isLoadingLeaveTypes } = useQuery({
+    queryKey: ["leave_types", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
+        .from("leave_requests")
+        .select("type")
+        .eq("user_id", userId);
+      if (error) throw error;
+
+      const typeCounts: { [key: string]: number } = {};
+      data.forEach((request: any) => {
+        const typeName = request.type || "Non spécifié";
+        typeCounts[typeName] = (typeCounts[typeName] || 0) + 1;
+      });
+
+      return Object.keys(typeCounts).map(type => ({
+        name: type,
+        value: typeCounts[type],
+      }));
+    },
+    enabled: !!userId,
+  });
+
+  const isLoading = isLoadingEmployees || isLoadingEmployeesByDepartment || isLoadingAttendance || isLoadingLeaveRequests || isLoadingTunisianHolidays || isLoadingMonthlyHours || isLoadingLeaveTypes;
 
   if (isLoading) {
     return <ReportsSkeleton />;
   }
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
@@ -194,6 +257,69 @@ const Reports = () => {
             </ResponsiveContainer>
           ) : (
             <p className="text-center text-muted-foreground">Aucune donnée de département disponible.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Heures Travaillées et Supplémentaires par Mois</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {monthlyHours && monthlyHours.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={monthlyHours}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="monthYear" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="workedHours" fill="hsl(var(--primary))" name="Heures Travaillées" />
+                <Bar dataKey="overtimeHours" fill="hsl(var(--accent))" name="Heures Supplémentaires" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-center text-muted-foreground">Aucune donnée d'heures travaillées ou supplémentaires disponible.</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Répartition des Demandes de Congé par Type</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {leaveTypes && leaveTypes.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={leaveTypes}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {leaveTypes.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-center text-muted-foreground">Aucune donnée de demandes de congé par type disponible.</p>
           )}
         </CardContent>
       </Card>
