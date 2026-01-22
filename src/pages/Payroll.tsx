@@ -17,6 +17,7 @@ import {
 import { PlusCircle, Edit, Trash2, FileText } from "lucide-react";
 import { PayrollFormDialog } from "@/components/PayrollFormDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { PayrollTableSkeleton } from "@/components/PayrollTableSkeleton"; // Import the new skeleton component
 
 const Payroll = () => {
   const { session } = useSession();
@@ -83,7 +84,7 @@ const Payroll = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Chargement des fiches de paie...</div>;
+    return <PayrollTableSkeleton />; // Render skeleton while loading
   }
 
   if (error) {
