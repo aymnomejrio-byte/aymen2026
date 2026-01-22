@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription, // Import DialogDescription
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -158,6 +159,9 @@ export const AuthorizationFormDialog: React.FC<AuthorizationFormDialogProps> = (
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{authorization ? "Modifier l'autorisation" : "Ajouter une autorisation spéciale"}</DialogTitle>
+          <DialogDescription>
+            {authorization ? "Modifiez les détails de l'autorisation existante." : "Remplissez les informations pour créer une nouvelle autorisation spéciale."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">

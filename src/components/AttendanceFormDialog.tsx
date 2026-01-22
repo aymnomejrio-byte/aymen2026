@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription, // Import DialogDescription
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -215,6 +216,9 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{attendance ? "Modifier la présence" : "Ajouter une présence"}</DialogTitle>
+          <DialogDescription>
+            {attendance ? "Modifiez les détails de l'enregistrement de présence existant." : "Remplissez les informations pour ajouter un nouvel enregistrement de présence."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
@@ -389,10 +393,10 @@ export const AttendanceFormDialog: React.FC<AttendanceFormDialogProps> = ({
                     <FormControl>
                       <Input type="number" step="0.5" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             </div>
 
             <DialogFooter>

@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription, // Import DialogDescription
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -163,6 +164,9 @@ export const LeaveRequestFormDialog: React.FC<LeaveRequestFormDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{leaveRequest ? "Modifier la demande de congé" : "Ajouter une demande de congé"}</DialogTitle>
+          <DialogDescription>
+            {leaveRequest ? "Modifiez les détails de la demande de congé existante." : "Remplissez les informations pour créer une nouvelle demande de congé."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">

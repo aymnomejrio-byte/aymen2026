@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription, // Import DialogDescription
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -123,6 +124,9 @@ export const TunisianHolidayFormDialog: React.FC<TunisianHolidayFormDialogProps>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{holiday ? "Modifier le jour férié" : "Ajouter un jour férié"}</DialogTitle>
+          <DialogDescription>
+            {holiday ? "Modifiez les détails du jour férié existant." : "Remplissez les informations pour ajouter un nouveau jour férié."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">

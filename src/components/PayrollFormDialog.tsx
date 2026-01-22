@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription, // Import DialogDescription
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -170,6 +171,9 @@ export const PayrollFormDialog: React.FC<PayrollFormDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{payroll ? "Modifier la fiche de paie" : "Ajouter une fiche de paie"}</DialogTitle>
+          <DialogDescription>
+            {payroll ? "Modifiez les détails de la fiche de paie existante." : "Remplissez les informations pour créer une nouvelle fiche de paie."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">

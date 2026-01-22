@@ -88,13 +88,20 @@ const Settings = () => {
     mutationFn: async (newSettings: SettingsFormValues) => {
       if (!userId) throw new Error("User not authenticated.");
 
+      const payload = {
+        ...newSettings,
+        user_id: userId,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (settings?.id) {
+        // If settings exist, include the ID for update
+        Object.assign(payload, { id: settings.id });
+      }
+
       const { data, error } = await supabase
         .from("app_settings")
-        .upsert({
-          ...newSettings,
-          user_id: userId,
-          id: settings?.id, // Include ID for update, if exists
-        }, { onConflict: 'user_id' }) // Use onConflict to handle upsert based on user_id
+        .upsert(payload, { onConflict: 'user_id' }) // Use onConflict to handle upsert based on user_id
         .select()
         .single();
 
