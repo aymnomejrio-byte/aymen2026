@@ -4,89 +4,113 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --primary: 225 60% 32%; /* #1E3A8A */
+    --primary-light: 216 92% 60%; /* #3B82F6 */
+    --success: 149 76% 36%; /* #16A34A */
+    --warning: 39 92% 50%; /* #F59E0B */
+    --danger: 354 70% 49%; /* #DC2626 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --bg-app: 210 20% 97%; /* #F8FAFC */
+    --bg-card: 0 0% 100%; /* #FFFFFF */
+    --bg-sidebar: 222 22% 9%; /* #0F172A */
+    --bg-hover: 216 100% 97%; /* #EFF6FF */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --text-main: 222 22% 9%; /* #0F172A */
+    --text-muted: 215 14% 66%; /* #64748B */
+    --border: 210 14% 90%; /* #E5E7EB */
+    --input: 210 14% 90%; /* #E5E7EB */
+    --ring: 216 92% 60%; /* Using primary-light for ring */
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --background: var(--bg-app);
+    --foreground: var(--text-main);
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --card: var(--bg-card);
+    --card-foreground: var(--text-main);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --popover: var(--bg-card);
+    --popover-foreground: var(--text-main);
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --primary-foreground: 0 0% 100%; /* White for primary text */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%; /* Keep a light gray for secondary */
+    --secondary-foreground: var(--text-main);
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --muted: var(--bg-hover);
+    --muted-foreground: var(--text-muted);
+
+    --accent: var(--bg-hover);
+    --accent-foreground: var(--text-main);
+
+    --destructive: var(--danger);
+    --destructive-foreground: 0 0% 100%; /* White for destructive text */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: var(--bg-sidebar);
+    --sidebar-foreground: 0 0% 100%; /* White */
+    --sidebar-primary: var(--primary-light); /* Active link background */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: var(--primary-light); /* Hover background */
+    --sidebar-accent-foreground: 0 0% 100%; /* White */
+    --sidebar-border: 222 22% 15%; /* Darker border for dark sidebar */
+    --sidebar-ring: var(--primary-light);
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Custom font sizes */
+    --h1: 22px;
+    --h2: 18px;
+    --text: 14px;
+    --small: 12px;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --primary: 225 60% 32%; /* #1E3A8A */
+    --primary-light: 216 92% 60%; /* #3B82F6 */
+    --success: 149 76% 36%; /* #16A34A */
+    --warning: 39 92% 50%; /* #F59E0B */
+    --danger: 354 70% 49%; /* #DC2626 */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --bg-app: 222.2 84% 4.9%; /* Dark background */
+    --bg-card: 222.2 84% 4.9%; /* Dark card background */
+    --bg-sidebar: 222 22% 9%; /* #0F172A */
+    --bg-hover: 217.2 32.6% 17.5%; /* Darker hover for dark mode */
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --text-main: 210 40% 98%; /* Light text */
+    --text-muted: 215 20.2% 65.1%; /* Lighter gray muted text */
+    --border: 217.2 32.6% 17.5%; /* Darker border */
+    --input: 217.2 32.6% 17.5%; /* Darker input border */
+    --ring: 212.7 26.8% 83.9%; /* Lighter ring for dark mode */
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --background: var(--bg-app);
+    --foreground: var(--text-main);
+
+    --card: var(--bg-card);
+    --card-foreground: var(--text-main);
+
+    --popover: var(--bg-card);
+    --popover-foreground: var(--text-main);
+
+    --primary-foreground: 222.2 47.4% 11.2%; /* Dark text for primary in dark mode */
 
     --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: var(--text-main);
 
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted-foreground: var(--text-muted);
 
     --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent-foreground: var(--text-main);
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: var(--danger);
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-background: var(--bg-sidebar);
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: var(--primary-light);
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-accent: 240 3.7% 15.9%; /* Darker accent for dark sidebar hover */
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: var(--primary-light);
   }
 }
 
@@ -96,6 +120,27 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans; /* Apply Inter font */
+  }
+
+  h1 {
+    font-size: var(--h1);
+  }
+
+  h2 {
+    font-size: var(--h2);
+  }
+
+  p {
+    font-size: var(--text);
+  }
+
+  small {
+    font-size: var(--small);
+  }
+
+  /* Custom styles for table row hover */
+  .hover-bg-card-foreground tr:hover {
+    background-color: hsl(var(--bg-hover));
   }
 }

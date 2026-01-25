@@ -23,7 +23,7 @@ interface LeaveRequestData {
   type: string;
   reason: string | null;
   status: string;
-  employees: EmployeeDetails | null; // This should be an object or null, not an array
+  employees: EmployeeDetails[] | null; // Changed to array of EmployeeDetails or null
 }
 
 interface TunisianHolidayData {
@@ -97,8 +97,10 @@ const LeaveCalendar = () => {
     const daysInLeave = eachDayOfInterval({ start: startDate, end: endDate });
 
     daysInLeave.forEach(day => {
-      const employeeFullName = request.employees
-        ? `${request.employees.first_name || ''} ${request.employees.last_name || ''}`.trim()
+      // Safely access the first employee in the array, if it exists
+      const employee = request.employees && request.employees.length > 0 ? request.employees[0] : null;
+      const employeeFullName = employee
+        ? `${employee.first_name || ''} ${employee.last_name || ''}`.trim()
         : 'Employé inconnu';
 
       allEvents.push({
@@ -127,7 +129,7 @@ const LeaveCalendar = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
       <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Calendrier d'Équipe</h2>
-      <p className="text-600 dark:text-gray-400 mb-6">
+      <p className="text-gray-600 dark:text-gray-400 mb-6">
         Visualisez les congés approuvés et les jours fériés pour une meilleure planification.
       </p>
       <Separator className="mb-6" />

@@ -27,6 +27,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          light: "hsl(var(--primary-light))", // Added primary-light
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -52,6 +53,19 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: { // Added success color
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: { // Added warning color
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        "bg-app": "hsl(var(--bg-app))", // Added bg-app
+        "bg-card": "hsl(var(--bg-card))", // Added bg-card
+        "bg-hover": "hsl(var(--bg-hover))", // Added bg-hover
+        "text-main": "hsl(var(--text-main))", // Added text-main
+        "text-muted": "hsl(var(--text-muted))", // Added text-muted
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -67,6 +81,12 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: { // Added Inter font family
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: { // Added custom card shadow
+        card: '0 6px 20px rgba(0,0,0,.05)',
       },
       keyframes: {
         "accordion-down": {
@@ -85,10 +105,15 @@ export default {
             height: "0",
           },
         },
+        fadeIn: { // Added fadeIn keyframe
+          from: { opacity: "0", transform: "translateY(6px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        fadeIn: "fadeIn 0.3s ease-in-out", // Added fadeIn animation
       },
     },
   },
