@@ -15,7 +15,8 @@ import Payroll from "./pages/Payroll";
 import Reports from "./pages/Reports";
 import TunisianHolidays from "./pages/TunisianHolidays";
 import Profile from "./pages/Profile";
-import Authorizations from "./pages/Authorizations"; // Import the new Authorizations page
+import Authorizations from "./pages/Authorizations";
+import LeaveCalendar from "./pages/LeaveCalendar"; // Import the new LeaveCalendar page
 import { SessionContextProvider } from "./components/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -47,11 +48,12 @@ const App = () => (
               <Route path="employees" element={<Employees />} />
               <Route path="attendance" element={<Attendance />} />
               <Route path="leave-requests" element={<LeaveRequests />} />
-              <Route path="authorizations" element={<Authorizations />} /> {/* New nested route for Authorizations */}
+              <Route path="authorizations" element={<Authorizations />} />
               <Route path="tunisian-holidays" element={<TunisianHolidays />} />
               <Route path="payroll" element={<Payroll />} />
               <Route path="reports" element={<Reports />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="leave-calendar" element={<LeaveCalendar />} /> {/* New nested route for LeaveCalendar */}
               {/* Add other nested routes here as we build them */}
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, LayoutDashboard, Settings, Users, CalendarDays, Clock, DollarSign, FileText, BarChart3, CalendarCheck, UserCircle, ShieldCheck } from "lucide-react"; // Added ShieldCheck icon for authorizations
+import { Menu, LayoutDashboard, Settings, Users, CalendarDays, Clock, DollarSign, FileText, BarChart3, CalendarCheck, UserCircle, ShieldCheck } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavLinkProps {
@@ -40,7 +40,8 @@ const SidebarContent = () => {
     { to: "/dashboard/employees", icon: Users, label: "Gestion d'Équipe" },
     { to: "/dashboard/attendance", icon: Clock, label: "Pointage Manuel" },
     { to: "/dashboard/leave-requests", icon: CalendarDays, label: "Demandes de Congé" },
-    { to: "/dashboard/authorizations", icon: ShieldCheck, label: "Autorisations Spéciales" }, // New item for Authorizations
+    { to: "/dashboard/leave-calendar", icon: CalendarDays, label: "Calendrier des Congés" }, // New item for Leave Calendar
+    { to: "/dashboard/authorizations", icon: ShieldCheck, label: "Autorisations Spéciales" },
     { to: "/dashboard/tunisian-holidays", icon: CalendarCheck, label: "Jours Fériés" },
     { to: "/dashboard/payroll", icon: DollarSign, label: "Paie Automatique" },
     { to: "/dashboard/reports", icon: BarChart3, label: "Rapports & Analyses" },
