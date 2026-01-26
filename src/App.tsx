@@ -16,7 +16,8 @@ import Reports from "./pages/Reports";
 import TunisianHolidays from "./pages/TunisianHolidays";
 import Profile from "./pages/Profile";
 import Authorizations from "./pages/Authorizations";
-import LeaveCalendar from "./pages/LeaveCalendar"; // Import the new LeaveCalendar page
+import LeaveCalendar from "./pages/LeaveCalendar";
+// Removed imports for EmployeeLinker and EmployeeDashboard
 import { SessionContextProvider } from "./components/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -31,9 +32,11 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            {/* Use DashboardLayout for all authenticated routes */}
+            {/* Removed routes for /employee-linker and /employee-dashboard */}
+
+            {/* Use DashboardLayout for all authenticated manager routes */}
             <Route path="/dashboard" element={<DashboardLayout />}>
-              {/* Nested routes for dashboard content */}
+              {/* Nested routes for manager dashboard content */}
               <Route index element={
                 <div className="text-center mt-8">
                   <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -53,7 +56,7 @@ const App = () => (
               <Route path="payroll" element={<Payroll />} />
               <Route path="reports" element={<Reports />} />
               <Route path="profile" element={<Profile />} />
-              <Route path="leave-calendar" element={<LeaveCalendar />} /> {/* New nested route for LeaveCalendar */}
+              <Route path="leave-calendar" element={<LeaveCalendar />} />
               {/* Add other nested routes here as we build them */}
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

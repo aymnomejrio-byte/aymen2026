@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Clock, CalendarDays, ShieldCheck } from "lucide-react";
-import { DashboardOverviewSkeleton } from "@/components/DashboardOverviewSkeleton"; // Import the new skeleton component
+import { DashboardOverviewSkeleton } from "@/components/DashboardOverviewSkeleton";
 
 const DashboardLayout = () => {
   const { supabase, session } = useSession();
